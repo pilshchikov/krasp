@@ -7,7 +7,13 @@ It works like a lightweight, open-source Krisp-style microphone filter: choose y
 Krasp is built for a focused idea:
 
 ```text
-your microphone -> Krasp removes background noise -> apps hear Krasp Microphone
+Your microphone
+      |
+      v
+Krasp removes background noise
+      |
+      v
+Apps hear Krasp Microphone
 ```
 
 The processing runs locally on your Mac. Krasp does not send microphone audio to a cloud service.
