@@ -96,7 +96,7 @@ and restarts CoreAudio so macOS can discover the virtual microphone.
 
 ## Release
 
-GitHub Actions builds an installer package when app-affecting files change on `main`. Pushing a tag like `v2026.1.1` also creates a draft prerelease with the `.pkg` and checksum attached.
+GitHub Actions builds and publishes a GitHub prerelease when app-affecting files change on `main`. Pushing a tag like `v2026.1.1` also creates a tagged prerelease with the `.pkg` and checksum attached.
 
 Release workflow notes are in [Release](docs/RELEASE.md).
 
