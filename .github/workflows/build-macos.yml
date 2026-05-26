@@ -48,7 +48,7 @@ jobs:
           if [[ "${GITHUB_REF_TYPE}" == "tag" && "${GITHUB_REF_NAME}" == v* ]]; then
             echo "KRASP_VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
           else
-            echo "KRASP_VERSION=0.1.0-dev.${GITHUB_RUN_NUMBER}" >> "$GITHUB_ENV"
+            echo "KRASP_VERSION=2026.1.${GITHUB_RUN_NUMBER}" >> "$GITHUB_ENV"
           fi
 
       - name: Verify source build

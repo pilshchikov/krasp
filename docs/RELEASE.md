@@ -6,14 +6,14 @@ Krasp currently produces ad-hoc signed macOS artifacts. This is enough for devel
 
 ```sh
 make clean
-make dist VERSION=0.1.0 BUILD_NUMBER=1
+make dist VERSION=2026.1.1 BUILD_NUMBER=1
 ```
 
 The output is:
 
 ```text
-dist/Krasp-0.1.0-macos-<arch>.zip
-dist/Krasp-0.1.0-macos-<arch>.zip.sha256
+dist/Krasp-2026.1.1-macos-<arch>.zip
+dist/Krasp-2026.1.1-macos-<arch>.zip.sha256
 ```
 
 ## GitHub Actions
@@ -23,8 +23,8 @@ The `Build macOS` workflow runs on pushes to `main`, pull requests, and version 
 Create a release tag:
 
 ```sh
-git tag v0.1.0
-git push origin v0.1.0
+git tag v2026.1.1
+git push origin v2026.1.1
 ```
 
 ## Production Signing And Notarization
@@ -42,7 +42,7 @@ Until that is done, release notes should clearly call artifacts developer builds
 ## Release Checklist
 
 - `make verify` passes.
-- `make dist VERSION=<version> BUILD_NUMBER=<build>` passes.
+- `make dist VERSION=2026.x.<build> BUILD_NUMBER=<build>` passes.
 - `Krasp.app` launches on a clean macOS 14 or newer machine.
 - Virtual microphone install, repair, and uninstall paths work.
 - `Krasp Microphone` appears in Sound settings and receives processed audio.

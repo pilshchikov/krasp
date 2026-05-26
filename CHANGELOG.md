@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0
+## 2026.1.1
 
 - Initial public source release preparation.
 - Menu-bar microphone noise-cancellation app.

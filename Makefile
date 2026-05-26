@@ -1,8 +1,10 @@
 APP_NAME := Krasp
 HAL_NAME := KraspHAL
 CONFIGURATION ?= release
-VERSION ?= 0.1.0
+VERSION_YEAR ?= 2026
+VERSION_MINOR ?= 1
 BUILD_NUMBER ?= 1
+VERSION ?= $(VERSION_YEAR).$(VERSION_MINOR).$(BUILD_NUMBER)
 APP_BUNDLE_ID ?= io.github.pilshchikov.krasp
 HAL_BUNDLE_ID ?= io.github.pilshchikov.krasp.hal
 CODESIGN_IDENTITY ?= -
@@ -44,7 +46,7 @@ app: build hal neural
 	plutil -replace CFBundleDisplayName -string "$(APP_NAME)" "$(CONTENTS_DIR)/Info.plist"
 	plutil -replace CFBundleIdentifier -string "$(APP_BUNDLE_ID)" "$(CONTENTS_DIR)/Info.plist"
 	plutil -replace CFBundleShortVersionString -string "$(VERSION)" "$(CONTENTS_DIR)/Info.plist"
-	plutil -replace CFBundleVersion -string "$(BUILD_NUMBER)" "$(CONTENTS_DIR)/Info.plist"
+	plutil -replace CFBundleVersion -string "$(VERSION)" "$(CONTENTS_DIR)/Info.plist"
 	$(MAKE) sign-app
 
 hal:
@@ -53,7 +55,7 @@ hal:
 	cp "HAL/$(HAL_NAME)/Info.plist" "$(HAL_CONTENTS_DIR)/Info.plist"
 	plutil -replace CFBundleIdentifier -string "$(HAL_BUNDLE_ID)" "$(HAL_CONTENTS_DIR)/Info.plist"
 	plutil -replace CFBundleShortVersionString -string "$(VERSION)" "$(HAL_CONTENTS_DIR)/Info.plist"
-	plutil -replace CFBundleVersion -string "$(BUILD_NUMBER)" "$(HAL_CONTENTS_DIR)/Info.plist"
+	plutil -replace CFBundleVersion -string "$(VERSION)" "$(HAL_CONTENTS_DIR)/Info.plist"
 	clang -std=c11 -Wall -Wextra -Werror -fvisibility=hidden -bundle \
 		-framework CoreAudio -framework CoreFoundation \
 		-IShared \
