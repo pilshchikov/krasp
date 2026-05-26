@@ -1,17 +1,48 @@
 # Krasp
 
-Krasp is a macOS menu-bar app that turns a physical microphone into a local noise-cancelled virtual microphone named `Krasp Microphone`.
+Krasp is a simple noise-cancellation app for your microphone on macOS.
 
-It captures audio from the selected input device, runs local speech enhancement, and publishes the processed mono 48 kHz PCM stream through a CoreAudio HAL plug-in. Audio processing is local; Krasp does not send microphone audio to a server.
+It works like a lightweight, open-source Krisp-style microphone filter: choose your real microphone in Krasp, turn noise cancellation on, and then select `Krasp Microphone` in Zoom, Discord, Google Meet, OBS, QuickTime, or any other app.
 
-## Features
+Krasp is built for a focused idea:
 
-- Menu-bar SwiftUI app for microphone selection, enable/disable, suppression level, and live meters.
-- CoreAudio HAL virtual input device named `Krasp Microphone`.
-- Shared-memory PCM ring buffer between the menu-bar app and HAL plug-in.
-- Hush neural speech enhancement as the primary denoiser.
-- Adaptive high-pass/noise-gate fallback when the neural runtime or model cannot load.
-- Ad-hoc signed local app bundle and macOS installer package target.
+```text
+your microphone -> Krasp removes background noise -> apps hear Krasp Microphone
+```
+
+The processing runs locally on your Mac. Krasp does not send microphone audio to a cloud service.
+
+## What It Does
+
+- Removes background noise from your microphone before other apps hear it.
+- Creates a virtual microphone named `Krasp Microphone`.
+- Lives quietly in the macOS menu bar.
+- Lets you choose the physical input microphone.
+- Lets you adjust how strong the noise cancellation should be.
+- Shows simple input and reduction meters while it is running.
+
+## Why
+
+Calls, streams, and recordings often pick up fans, keyboard noise, room echo, and other background sound. Krasp is meant to be a small macOS utility that sits between your real microphone and your apps, cleaning the audio path without needing a full audio-routing setup.
+
+It is not trying to be a studio suite. It is a practical microphone noise-cancellation switch for everyday calls and recordings.
+
+## Current Status
+
+Krasp is early-stage macOS audio software. The source is ready for public development, and GitHub Actions builds a macOS installer package on every push to `main`.
+
+The current release artifacts are unsigned developer builds. A polished public release still needs Developer ID signing and Apple notarization.
+
+## How It Works
+
+Krasp has two parts:
+
+- `Krasp.app`: the menu-bar app that captures your selected microphone and applies noise cancellation.
+- `KraspHAL.driver`: the virtual microphone driver that exposes the cleaned audio as `Krasp Microphone`.
+
+Under the hood, Krasp uses Hush/DeepFilterNet for neural speech enhancement. If the neural runtime cannot load, it falls back to a simpler local DSP path.
+
+More detail is in [Architecture](docs/ARCHITECTURE.md).
 
 ## Requirements
 
@@ -22,72 +53,44 @@ It captures audio from the selected input device, runs local speech enhancement,
 
 ## Build
 
+Build the app:
+
 ```sh
 make app
 ```
 
-The app bundle is written to:
-
-```text
-.build/release/Krasp.app
-```
-
-Run it locally:
+Run it:
 
 ```sh
 make run
 ```
 
-Build a distributable installer package and checksum:
+Build a macOS installer package:
 
 ```sh
 make dist
 ```
 
-Artifacts are written to `dist/` as a `.pkg` installer and `.sha256` checksum.
+Artifacts are written to `dist/`.
 
 ## Install The Virtual Microphone
 
 1. Build and launch Krasp with `make run`.
 2. Click `Install` in the Virtual Microphone row.
 3. Approve the macOS administrator prompt.
-4. Select `Krasp Microphone` as the input device in your conferencing or recording app.
+4. Select `Krasp Microphone` as the input device in your call, recording, or streaming app.
 
-The installer copies the embedded HAL driver to:
+The app installs its embedded HAL driver to:
 
 ```text
 /Library/Audio/Plug-Ins/HAL/KraspHAL.driver
 ```
 
-and restarts CoreAudio so macOS can discover the new virtual microphone.
+and restarts CoreAudio so macOS can discover the virtual microphone.
 
-For development, the HAL driver can also be installed from the terminal:
+## Release
 
-```sh
-make install-hal
-```
-
-Uninstall it with:
-
-```sh
-make uninstall-hal
-```
-
-## How It Works
-
-Krasp captures microphone frames through `AVCaptureSession`. The audio path is:
-
-```text
-physical microphone -> Krasp app -> Hush/DeepFilterNet or fallback DSP -> shared ring buffer -> KraspHAL -> Krasp Microphone
-```
-
-Hush runs at 16 kHz with 10 ms neural frames. Krasp downsamples 48 kHz capture frames to 16 kHz, processes them, then upsamples the enhanced frames back to 48 kHz for the virtual microphone.
-
-See [Architecture](docs/ARCHITECTURE.md) for more detail.
-
-## Release Status
-
-This repository is prepared for public source publication and unsigned/ad-hoc build artifacts. A production release still needs Developer ID signing and Apple notarization before most end users can install it without warnings.
+GitHub Actions builds an installer package on each push to `main`. Pushing a tag like `v2026.1.1` also creates a draft prerelease with the `.pkg` and checksum attached.
 
 Release workflow notes are in [Release](docs/RELEASE.md).
 
