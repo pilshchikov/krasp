@@ -7,11 +7,12 @@ BUILD_NUMBER ?= 1
 VERSION ?= $(VERSION_YEAR).$(VERSION_MINOR).$(BUILD_NUMBER)
 APP_BUNDLE_ID ?= io.github.pilshchikov.krasp
 HAL_BUNDLE_ID ?= io.github.pilshchikov.krasp.hal
+PKG_IDENTIFIER ?= io.github.pilshchikov.krasp.installer
 CODESIGN_IDENTITY ?= -
 CODESIGN_FLAGS ?= --force --timestamp=none
 DIST_DIR := dist
 ARTIFACT_ARCH := $(shell uname -m)
-ZIP_NAME := $(APP_NAME)-$(VERSION)-macos-$(ARTIFACT_ARCH).zip
+PKG_NAME := $(APP_NAME)-$(VERSION)-macos-$(ARTIFACT_ARCH).pkg
 BUILD_DIR := .build/$(CONFIGURATION)
 APP_DIR := $(BUILD_DIR)/$(APP_NAME).app
 CONTENTS_DIR := $(APP_DIR)/Contents
@@ -76,8 +77,12 @@ sign-app:
 
 dist: app
 	mkdir -p "$(DIST_DIR)"
-	ditto -c -k --keepParent "$(APP_DIR)" "$(DIST_DIR)/$(ZIP_NAME)"
-	shasum -a 256 "$(DIST_DIR)/$(ZIP_NAME)" > "$(DIST_DIR)/$(ZIP_NAME).sha256"
+	pkgbuild --component "$(APP_DIR)" \
+		--install-location "/Applications" \
+		--identifier "$(PKG_IDENTIFIER)" \
+		--version "$(VERSION)" \
+		"$(DIST_DIR)/$(PKG_NAME)"
+	shasum -a 256 "$(DIST_DIR)/$(PKG_NAME)" > "$(DIST_DIR)/$(PKG_NAME).sha256"
 
 verify:
 	swift build -c $(CONFIGURATION)

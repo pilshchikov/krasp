@@ -54,15 +54,15 @@ jobs:
       - name: Verify source build
         run: make verify CONFIGURATION=release
 
-      - name: Build release archive
+      - name: Build installer package
         run: make dist CONFIGURATION=release VERSION="${KRASP_VERSION}" BUILD_NUMBER="${GITHUB_RUN_NUMBER}"
 
-      - name: Upload app archive
+      - name: Upload installer package
         uses: actions/upload-artifact@v4
         with:
           name: Krasp-${{ env.KRASP_VERSION }}-macos-${{ runner.arch }}
           path: |
-            dist/*.zip
+            dist/*.pkg
             dist/*.sha256
           if-no-files-found: error
 
@@ -73,5 +73,5 @@ jobs:
           draft: true
           prerelease: true
           files: |
-            dist/*.zip
+            dist/*.pkg
             dist/*.sha256

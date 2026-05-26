@@ -13,6 +13,7 @@ DerivedData/
 # Release artifacts
 dist/
 *.zip
+*.pkg
 *.sha256
 
 # Local third-party caches downloaded by `make neural`.

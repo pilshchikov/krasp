@@ -1,6 +1,6 @@
 # Release
 
-Krasp currently produces ad-hoc signed macOS artifacts. This is enough for developer testing and GitHub Actions artifacts, but not enough for a polished public installer.
+Krasp currently produces an unsigned macOS `.pkg` installer containing an ad-hoc signed app bundle. This is enough for developer testing and GitHub Actions artifacts, but not enough for a polished public installer.
 
 ## Prepare A Local Release Build
 
@@ -12,13 +12,13 @@ make dist VERSION=2026.1.1 BUILD_NUMBER=1
 The output is:
 
 ```text
-dist/Krasp-2026.1.1-macos-<arch>.zip
-dist/Krasp-2026.1.1-macos-<arch>.zip.sha256
+dist/Krasp-2026.1.1-macos-<arch>.pkg
+dist/Krasp-2026.1.1-macos-<arch>.pkg.sha256
 ```
 
 ## GitHub Actions
 
-The `Build macOS` workflow runs on pushes to `main`, pull requests, and version tags. It builds the app bundle, uploads the zip/checksum as workflow artifacts, and creates a GitHub Release for tags matching `v*`.
+The `Build macOS` workflow runs on pushes to `main`, pull requests, and version tags. It builds the app bundle, packages it as a `.pkg` installer, uploads the installer/checksum as workflow artifacts, and creates a GitHub Release for tags matching `v*`.
 
 Create a release tag:
 
@@ -32,7 +32,7 @@ git push origin v2026.1.1
 Before promoting Krasp as an end-user release, add a Developer ID signing path:
 
 1. Sign `KraspHAL.driver`, `libdf.dylib`, and `Krasp.app` with a Developer ID Application certificate.
-2. Package the app in a signed DMG or PKG.
+2. Sign the installer package or wrap the app in a signed DMG.
 3. Submit the artifact to Apple notarization.
 4. Staple the notarization ticket.
 5. Update the GitHub workflow to use repository secrets for signing identity and notarization credentials.

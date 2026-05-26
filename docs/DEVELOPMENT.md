@@ -24,7 +24,7 @@ make build       # Swift executable only
 make hal         # HAL driver only
 make neural      # Hush model plus libDF.dylib
 make app         # Full app bundle
-make dist        # Release zip plus SHA-256 checksum
+make dist        # Release installer package plus SHA-256 checksum
 make verify      # Fast source/build sanity checks
 make clean       # Remove Swift build output
 ```

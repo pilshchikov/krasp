@@ -11,7 +11,7 @@ It captures audio from the selected input device, runs local speech enhancement,
 - Shared-memory PCM ring buffer between the menu-bar app and HAL plug-in.
 - Hush neural speech enhancement as the primary denoiser.
 - Adaptive high-pass/noise-gate fallback when the neural runtime or model cannot load.
-- Ad-hoc signed local app bundle and release zip target.
+- Ad-hoc signed local app bundle and macOS installer package target.
 
 ## Requirements
 
@@ -38,13 +38,13 @@ Run it locally:
 make run
 ```
 
-Build a distributable zip and checksum:
+Build a distributable installer package and checksum:
 
 ```sh
 make dist
 ```
 
-Artifacts are written to `dist/`.
+Artifacts are written to `dist/` as a `.pkg` installer and `.sha256` checksum.
 
 ## Install The Virtual Microphone
 
