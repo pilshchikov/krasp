@@ -18,7 +18,9 @@ dist/Krasp-2026.1.1-macos-<arch>.pkg.sha256
 
 ## GitHub Actions
 
-The `Build macOS` workflow runs on pushes to `main`, pull requests, and version tags. It builds the app bundle, packages it as a `.pkg` installer, uploads the installer/checksum as workflow artifacts, and creates a GitHub Release for tags matching `v*`.
+The `Build macOS` workflow runs on app-affecting pushes to `main`, app-affecting pull requests, manual dispatches, and version tags. It builds the app bundle, packages it as a `.pkg` installer, uploads the installer/checksum as workflow artifacts, and creates a GitHub Release for tags matching `v*`.
+
+Docs-only, README-only, metadata-only, and workflow-only pushes do not rebuild the app package.
 
 Create a release tag:
 

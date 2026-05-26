@@ -6,9 +6,23 @@ on:
       - main
     tags:
       - "v*"
+    paths:
+      - "Package.swift"
+      - "Makefile"
+      - "Sources/**"
+      - "HAL/**"
+      - "Shared/**"
+      - "Packaging/**"
   pull_request:
     branches:
       - main
+    paths:
+      - "Package.swift"
+      - "Makefile"
+      - "Sources/**"
+      - "HAL/**"
+      - "Shared/**"
+      - "Packaging/**"
   workflow_dispatch:
 
 permissions:
