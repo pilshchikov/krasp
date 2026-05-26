@@ -16,7 +16,7 @@ It captures audio from the selected input device, runs local speech enhancement,
 ## Requirements
 
 - macOS 14 or newer.
-- Xcode command-line tools with Swift 6.2 support.
+- Xcode command-line tools with Swift 6.1 support.
 - Rust toolchain with Cargo.
 - Internet access for the first neural build, which downloads Hush and clones DeepFilterNet.
 
