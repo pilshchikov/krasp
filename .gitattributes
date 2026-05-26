@@ -1,0 +1,11 @@
+*.c text eol=lf
+*.h text eol=lf
+*.md text eol=lf
+*.plist text eol=lf
+*.swift text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+*.icns binary
+*.tar.gz binary
+*.zip binary

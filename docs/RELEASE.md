@@ -1,0 +1,49 @@
+# Release
+
+Krasp currently produces ad-hoc signed macOS artifacts. This is enough for developer testing and GitHub Actions artifacts, but not enough for a polished public installer.
+
+## Prepare A Local Release Build
+
+```sh
+make clean
+make dist VERSION=0.1.0 BUILD_NUMBER=1
+```
+
+The output is:
+
+```text
+dist/Krasp-0.1.0-macos-<arch>.zip
+dist/Krasp-0.1.0-macos-<arch>.zip.sha256
+```
+
+## GitHub Actions
+
+The `Build macOS` workflow runs on pushes to `main`, pull requests, and version tags. It builds the app bundle, uploads the zip/checksum as workflow artifacts, and creates a GitHub Release for tags matching `v*`.
+
+Create a release tag:
+
+```sh
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+## Production Signing And Notarization
+
+Before promoting Krasp as an end-user release, add a Developer ID signing path:
+
+1. Sign `KraspHAL.driver`, `libdf.dylib`, and `Krasp.app` with a Developer ID Application certificate.
+2. Package the app in a signed DMG or PKG.
+3. Submit the artifact to Apple notarization.
+4. Staple the notarization ticket.
+5. Update the GitHub workflow to use repository secrets for signing identity and notarization credentials.
+
+Until that is done, release notes should clearly call artifacts developer builds.
+
+## Release Checklist
+
+- `make verify` passes.
+- `make dist VERSION=<version> BUILD_NUMBER=<build>` passes.
+- `Krasp.app` launches on a clean macOS 14 or newer machine.
+- Virtual microphone install, repair, and uninstall paths work.
+- `Krasp Microphone` appears in Sound settings and receives processed audio.
+- `THIRD_PARTY_NOTICES.md` is still accurate for bundled model/runtime versions.

@@ -1,0 +1,25 @@
+.DS_Store
+
+# Swift / Xcode build output
+.build/
+.swiftpm/
+DerivedData/
+*.xcodeproj/
+*.xcworkspace/
+*.xcuserdata/
+*.xcuserstate
+*.dSYM/
+
+# Release artifacts
+dist/
+*.zip
+*.sha256
+
+# Local third-party caches downloaded by `make neural`.
+ThirdParty/DeepFilterNet/
+ThirdParty/Hush/*.tar.gz
+!ThirdParty/Hush/.gitkeep
+
+# Local environment
+.env
+.env.*
