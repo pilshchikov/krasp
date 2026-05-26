@@ -53,9 +53,9 @@ final class NeuralNoiseSuppressor: @unchecked Sendable {
         }
 
         input48.append(contentsOf: samples)
-        while input48.count >= 480 {
-            let frame48 = Array(input48.prefix(480))
-            input48.removeFirst(480)
+        while input48.count >= NeuralFrame.inputSampleCount48k {
+            let frame48 = Array(input48.prefix(NeuralFrame.inputSampleCount48k))
+            input48.removeFirst(NeuralFrame.inputSampleCount48k)
             processFrame48(frame48)
         }
 
@@ -145,6 +145,10 @@ final class NeuralNoiseSuppressor: @unchecked Sendable {
     private func firstExistingPath(_ candidates: [String]) -> String? {
         candidates.first { FileManager.default.fileExists(atPath: $0) }
     }
+}
+
+private enum NeuralFrame {
+    static let inputSampleCount48k = 480
 }
 
 private enum Downsampler {
