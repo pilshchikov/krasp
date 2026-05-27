@@ -77,6 +77,20 @@ struct AppMenuView: View {
                     .frame(width: 38, alignment: .trailing)
             }
 
+            HStack(spacing: 10) {
+                Text("Output")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Slider(value: $appState.outputGain, in: 0.5...2.0)
+                    .disabled(!appState.canRun)
+
+                Text("\(Int(appState.outputGain * 100))%")
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(.secondary)
+                    .frame(width: 44, alignment: .trailing)
+            }
+
             HStack(spacing: 8) {
                 Image(systemName: appState.processorName == "Fallback DSP" ? "exclamationmark.triangle" : "brain.head.profile")
                     .foregroundStyle(appState.processorName == "Fallback DSP" ? .orange : .green)

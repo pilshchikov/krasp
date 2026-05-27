@@ -17,6 +17,12 @@ final class AppState: ObservableObject {
             audioController.suppressionAmount = Float(suppressionAmount)
         }
     }
+    @Published var outputGain: Double {
+        didSet {
+            preferences.outputGain = outputGain
+            audioController.outputGain = Float(outputGain)
+        }
+    }
     @Published var isEnabled: Bool {
         didSet {
             preferences.isEnabled = isEnabled
@@ -39,9 +45,11 @@ final class AppState: ObservableObject {
     init() {
         selectedDeviceUID = preferences.selectedDeviceUID
         suppressionAmount = preferences.suppressionAmount
+        outputGain = preferences.outputGain
         isEnabled = preferences.isEnabled
 
         audioController.suppressionAmount = Float(preferences.suppressionAmount)
+        audioController.outputGain = Float(preferences.outputGain)
         processorName = audioController.processorName
         audioController.onMeterUpdate = { [weak self] input, reduction in
             Task { @MainActor in

@@ -25,6 +25,7 @@ enum AudioCaptureError: LocalizedError {
 final class AudioCaptureController: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate, @unchecked Sendable {
     var onMeterUpdate: (@Sendable (_ input: Double, _ reduction: Double) -> Void)?
     var suppressionAmount: Float = 0.75
+    var outputGain: Float = 1
     var processorName: String {
         neuralSuppressor.isAvailable ? "Hush neural 2026" : "Fallback DSP"
     }
@@ -133,6 +134,7 @@ final class AudioCaptureController: NSObject, AVCaptureAudioDataOutputSampleBuff
             ? neuralSuppressor.process(samples: &samples, amount: suppressionAmount)
             : suppressor.process(samples: &samples, amount: suppressionAmount)
         let sampleRate = Self.sampleRate(from: sampleBuffer) ?? 48_000
+        applyOutputGain(to: &samples)
 
         samples.withUnsafeBufferPointer { pointer in
             sink.write(samples: pointer, sampleRate: sampleRate)
@@ -179,4 +181,26 @@ final class AudioCaptureController: NSObject, AVCaptureAudioDataOutputSampleBuff
 
         return streamDescription.pointee.mSampleRate
     }
+
+    private func applyOutputGain(to samples: inout [Float]) {
+        let clampedGain = max(OutputLevel.minimumGain, min(OutputLevel.maximumGain, outputGain))
+        guard clampedGain != 1 else {
+            return
+        }
+
+        for index in samples.indices {
+            samples[index] = Self.softLimit(samples[index] * clampedGain)
+        }
+    }
+
+    private static func softLimit(_ sample: Float) -> Float {
+        let clamped = max(-OutputLevel.softLimitCeiling, min(OutputLevel.softLimitCeiling, sample))
+        return clamped / (1 + abs(clamped) * 0.04)
+    }
+}
+
+private enum OutputLevel {
+    static let minimumGain: Float = 0.5
+    static let maximumGain: Float = 2.0
+    static let softLimitCeiling: Float = 1.5
 }
