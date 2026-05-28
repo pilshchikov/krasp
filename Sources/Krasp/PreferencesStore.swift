@@ -4,6 +4,7 @@ final class PreferencesStore {
     private enum Key {
         static let selectedDeviceUID = "selectedDeviceUID"
         static let suppressionAmount = "suppressionAmount"
+        static let outputGain = "outputGain"
         static let isEnabled = "isEnabled"
     }
 
@@ -21,6 +22,16 @@ final class PreferencesStore {
         }
         set {
             defaults.set(newValue, forKey: Key.suppressionAmount)
+        }
+    }
+
+    var outputGain: Double {
+        get {
+            let stored = defaults.double(forKey: Key.outputGain)
+            return stored == 0 ? 1.0 : stored
+        }
+        set {
+            defaults.set(newValue, forKey: Key.outputGain)
         }
     }
 

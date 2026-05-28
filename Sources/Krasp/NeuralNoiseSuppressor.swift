@@ -22,6 +22,7 @@ final class NeuralNoiseSuppressor: @unchecked Sendable {
     private var modelFrameLength = 160
     private var lastInputRMS: Float = 0
     private var lastOutputRMS: Float = 0
+    private var smoothedOutputGain: Float = 1
 
     var isAvailable: Bool {
         state != nil && processFrame != nil
@@ -45,6 +46,7 @@ final class NeuralNoiseSuppressor: @unchecked Sendable {
         output48.removeAll(keepingCapacity: true)
         lastInputRMS = 0
         lastOutputRMS = 0
+        smoothedOutputGain = 1
     }
 
     func process(samples: inout [Float], amount: Float) -> NoiseProcessMetrics {
@@ -60,14 +62,41 @@ final class NeuralNoiseSuppressor: @unchecked Sendable {
         }
 
         let dry = samples
+        let dryRMS = AudioMeter.rms(dry)
+        var wet = [Float]()
+        wet.reserveCapacity(samples.count)
+        for index in samples.indices {
+            wet.append(output48.isEmpty ? dry[index] : output48.removeFirst())
+        }
+
+        applyLoudnessCompensation(to: &wet, dryRMS: dryRMS)
+
         let clampedAmount = max(0, min(1, amount))
         for index in samples.indices {
-            let processed = output48.isEmpty ? 0 : output48.removeFirst()
-            samples[index] = (processed * clampedAmount) + (dry[index] * (1 - clampedAmount))
+            samples[index] = (wet[index] * clampedAmount) + (dry[index] * (1 - clampedAmount))
         }
 
         let reduction = lastInputRMS > 0 ? max(0, min(1, 1 - (lastOutputRMS / lastInputRMS))) : 0
         return NoiseProcessMetrics(reduction: reduction)
+    }
+
+    private func applyLoudnessCompensation(to samples: inout [Float], dryRMS: Float) {
+        let wetRMS = AudioMeter.rms(samples)
+        guard dryRMS > NeuralFrame.minimumRMS, wetRMS > NeuralFrame.minimumRMS else {
+            return
+        }
+
+        let targetGain = min(NeuralFrame.maximumOutputGain, max(NeuralFrame.minimumOutputGain, dryRMS / wetRMS))
+        smoothedOutputGain = (smoothedOutputGain * 0.9) + (targetGain * 0.1)
+
+        for index in samples.indices {
+            samples[index] = softLimit(samples[index] * smoothedOutputGain)
+        }
+    }
+
+    private func softLimit(_ sample: Float) -> Float {
+        let clamped = max(-NeuralFrame.softLimitCeiling, min(NeuralFrame.softLimitCeiling, sample))
+        return clamped / (1 + abs(clamped) * 0.04)
     }
 
     private func processFrame48(_ frame48: [Float]) {
@@ -149,6 +178,10 @@ final class NeuralNoiseSuppressor: @unchecked Sendable {
 
 private enum NeuralFrame {
     static let inputSampleCount48k = 480
+    static let minimumRMS: Float = 0.000_001
+    static let minimumOutputGain: Float = 0.75
+    static let maximumOutputGain: Float = 2.5
+    static let softLimitCeiling: Float = 1.5
 }
 
 private enum Downsampler {
