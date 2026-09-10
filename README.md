@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/krasp-icon.png" alt="Krasp microphone icon" width="160" height="160">
+</p>
+
 # Krasp
 
 Krasp is a simple noise-cancellation app for your microphone on macOS.

@@ -41,7 +41,7 @@ app: build hal neural
 	cp -R "$(HAL_DIR)" "$(RESOURCES_DIR)/$(HAL_NAME).driver"
 	cp "$(DEEPFILTER_LIB)" "$(RESOURCES_DIR)/libdf.dylib"
 	cp "$(HUSH_MODEL)" "$(RESOURCES_DIR)/advanced_dfnet16k_model_best_onnx.tar.gz"
-	cp "Sources/Krasp/Resources/AppIcon.icns" "$(RESOURCES_DIR)/AppIcon.icns" 2>/dev/null || true
+	cp "Sources/Krasp/Resources/AppIcon.icns" "$(RESOURCES_DIR)/AppIcon.icns"
 	plutil -replace CFBundleExecutable -string "$(APP_NAME)" "$(CONTENTS_DIR)/Info.plist"
 	plutil -replace CFBundleName -string "$(APP_NAME)" "$(CONTENTS_DIR)/Info.plist"
 	plutil -replace CFBundleDisplayName -string "$(APP_NAME)" "$(CONTENTS_DIR)/Info.plist"

@@ -14,6 +14,7 @@ let package = Package(
         .executableTarget(
             name: "Krasp",
             path: "Sources/Krasp",
+            exclude: ["Resources"],
             swiftSettings: [
                 .enableUpcomingFeature("ExistentialAny")
             ]
