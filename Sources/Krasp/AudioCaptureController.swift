@@ -24,8 +24,17 @@ enum AudioCaptureError: LocalizedError {
 
 final class AudioCaptureController: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate, @unchecked Sendable {
     var onMeterUpdate: (@Sendable (_ input: Double, _ reduction: Double) -> Void)?
-    var suppressionAmount: Float = 0.75
-    var outputGain: Float = 1
+    private let settingsLock = NSLock()
+    private var storedSuppressionAmount: Float = 0.75
+    private var storedOutputGain: Float = 1
+    var suppressionAmount: Float {
+        get { settingsLock.withLock { storedSuppressionAmount } }
+        set { settingsLock.withLock { storedSuppressionAmount = newValue } }
+    }
+    var outputGain: Float {
+        get { settingsLock.withLock { storedOutputGain } }
+        set { settingsLock.withLock { storedOutputGain = newValue } }
+    }
     var processorName: String {
         neuralSuppressor.isAvailable ? "Hush neural 2026" : "Fallback DSP"
     }
@@ -93,6 +102,8 @@ final class AudioCaptureController: NSObject, AVCaptureAudioDataOutputSampleBuff
 
         output?.setSampleBufferDelegate(nil, queue: nil)
         output = nil
+        // Finish callbacks before resetting processors or starting another device.
+        processingQueue.sync {}
     }
 
     func captureOutput(
@@ -164,11 +175,17 @@ final class AudioCaptureController: NSObject, AVCaptureAudioDataOutputSampleBuff
             position: .unspecified
         )
 
-        if let uid, let selected = discovery.devices.first(where: { $0.uniqueID == uid }) {
-            return selected
+        let devices = discovery.devices.filter {
+            $0.uniqueID != AudioDeviceManager.virtualMicrophoneUID
         }
-
-        return AVCaptureDevice.default(for: .audio) ?? discovery.devices.first
+        if let uid {
+            return devices.first { $0.uniqueID == uid }
+        }
+        if let preferred = AVCaptureDevice.default(for: .audio),
+           devices.contains(where: { $0.uniqueID == preferred.uniqueID }) {
+            return preferred
+        }
+        return devices.first
     }
 
     private static func sampleRate(from sampleBuffer: CMSampleBuffer) -> Double? {

@@ -8,7 +8,11 @@ final class PreferencesStore {
         static let isEnabled = "isEnabled"
     }
 
-    private let defaults = UserDefaults.standard
+    private let defaults: UserDefaults
+
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+    }
 
     var selectedDeviceUID: String? {
         get { defaults.string(forKey: Key.selectedDeviceUID) }
@@ -17,8 +21,7 @@ final class PreferencesStore {
 
     var suppressionAmount: Double {
         get {
-            let stored = defaults.double(forKey: Key.suppressionAmount)
-            return stored == 0 ? 0.75 : stored
+            boundedValue(forKey: Key.suppressionAmount, fallback: 0.75, range: 0...1)
         }
         set {
             defaults.set(newValue, forKey: Key.suppressionAmount)
@@ -27,12 +30,18 @@ final class PreferencesStore {
 
     var outputGain: Double {
         get {
-            let stored = defaults.double(forKey: Key.outputGain)
-            return stored == 0 ? 1.0 : stored
+            boundedValue(forKey: Key.outputGain, fallback: 1.0, range: 0.5...2)
         }
         set {
             defaults.set(newValue, forKey: Key.outputGain)
         }
+    }
+
+    private func boundedValue(forKey key: String, fallback: Double, range: ClosedRange<Double>) -> Double {
+        guard let stored = defaults.object(forKey: key) as? NSNumber else { return fallback }
+        let value = stored.doubleValue
+        guard value.isFinite else { return fallback }
+        return min(range.upperBound, max(range.lowerBound, value))
     }
 
     var isEnabled: Bool {

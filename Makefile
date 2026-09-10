@@ -85,8 +85,10 @@ dist: app
 	shasum -a 256 "$(DIST_DIR)/$(PKG_NAME)" > "$(DIST_DIR)/$(PKG_NAME).sha256"
 
 verify:
-	swift build -c $(CONFIGURATION)
+	swift test -c $(CONFIGURATION)
 	$(MAKE) hal
+	clang -std=c11 -Wall -Wextra -Werror -framework CoreAudio -framework CoreFoundation Tests/HAL/RingTests.c -o "$(BUILD_DIR)/KraspRingTests"
+	"$(BUILD_DIR)/KraspRingTests"
 	plutil -lint Packaging/Info.plist HAL/$(HAL_NAME)/Info.plist
 
 install-hal: hal

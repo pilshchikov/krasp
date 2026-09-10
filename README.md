@@ -35,7 +35,7 @@ It is not trying to be a studio suite. It is a practical microphone noise-cancel
 
 ## Current Status
 
-Krasp is early-stage macOS audio software. The source is ready for public development, and GitHub Actions builds a macOS installer package when app-affecting files change on `main`.
+Krasp is early-stage macOS audio software. The source is ready for public development, and GitHub Actions builds a macOS installer package when app-affecting files change on `master`.
 
 The current release artifacts are unsigned developer builds. A polished public release still needs Developer ID signing and Apple notarization.
 
@@ -96,7 +96,7 @@ and restarts CoreAudio so macOS can discover the virtual microphone.
 
 ## Release
 
-GitHub Actions builds and publishes a GitHub prerelease when app-affecting files change on `main`. Pushing a tag like `v2026.1.1` also creates a tagged prerelease with the `.pkg` and checksum attached.
+GitHub Actions builds and publishes a GitHub prerelease when app-affecting files change on `master`. Pushing a tag like `v2026.1.1` also creates a tagged prerelease with the `.pkg` and checksum attached.
 
 Release workflow notes are in [Release](docs/RELEASE.md).
 

@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <sys/mman.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include "../../Shared/KraspSharedRing.h"
@@ -191,6 +192,12 @@ static void OpenRingIfNeeded(void) {
 
     int fd = open(KRASP_RING_FILE_PATH, O_RDONLY, 0);
     if (fd < 0) {
+        return;
+    }
+
+    struct stat fileInfo;
+    if (fstat(fd, &fileInfo) != 0 || fileInfo.st_size < (off_t)gRingByteCount) {
+        close(fd);
         return;
     }
 

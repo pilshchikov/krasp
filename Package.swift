@@ -17,6 +17,7 @@ let package = Package(
             swiftSettings: [
                 .enableUpcomingFeature("ExistentialAny")
             ]
-        )
+        ),
+        .testTarget(name: "KraspTests", dependencies: ["Krasp"])
     ]
 )

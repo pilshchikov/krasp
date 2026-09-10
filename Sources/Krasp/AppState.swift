@@ -65,14 +65,14 @@ final class AppState: ObservableObject {
 
         refreshVirtualMicrophoneState()
         await refreshDevices()
-        await requestMicrophoneAccess()
-
-        if isEnabled {
-            start()
-        }
     }
 
     func refreshDevices() async {
+        // Suppress selection-triggered restarts until permissions and devices agree.
+        canRun = false
+        audioController.stop()
+        inputLevel = 0
+        reductionLevel = 0
         let refreshed = deviceManager.inputDevices()
         devices = refreshed
 
@@ -80,9 +80,12 @@ final class AppState: ObservableObject {
             selectedDeviceUID = refreshed.first(where: \.isDefault)?.uid ?? refreshed.first?.uid
         }
 
-        if refreshed.isEmpty {
-            canRun = false
-            statusText = "No input microphones found"
+        await requestMicrophoneAccess()
+        refreshVirtualMicrophoneState()
+        if isEnabled && canRun {
+            start()
+        } else if canRun {
+            statusText = "Noise cancellation disabled"
         }
     }
 
@@ -111,7 +114,9 @@ final class AppState: ObservableObject {
         case .notDetermined:
             let granted = await AVCaptureDevice.requestAccess(for: .audio)
             canRun = granted && !devices.isEmpty
-            statusText = granted ? "Ready" : "Microphone access denied"
+            statusText = granted
+                ? (devices.isEmpty ? "No input microphones found" : "Ready")
+                : "Microphone access denied"
         case .denied, .restricted:
             canRun = false
             statusText = "Microphone access denied"

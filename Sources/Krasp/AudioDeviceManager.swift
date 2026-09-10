@@ -2,13 +2,16 @@ import CoreAudio
 import Foundation
 
 final class AudioDeviceManager {
+    static let virtualMicrophoneUID = "io.github.pilshchikov.krasp.microphone"
+
     func inputDevices() -> [AudioInputDevice] {
         let defaultID = defaultInputDeviceID()
 
         return allAudioDeviceIDs()
             .filter { hasInputStreams(deviceID: $0) }
             .compactMap { deviceID in
-                guard let uid = stringProperty(kAudioDevicePropertyDeviceUID, deviceID: deviceID) else {
+                guard let uid = stringProperty(kAudioDevicePropertyDeviceUID, deviceID: deviceID),
+                      uid != Self.virtualMicrophoneUID else {
                     return nil
                 }
 
