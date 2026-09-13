@@ -36,7 +36,7 @@ final class AudioCaptureController: NSObject, AVCaptureAudioDataOutputSampleBuff
         set { settingsLock.withLock { storedOutputGain = newValue } }
     }
     var processorName: String {
-        neuralSuppressor.isAvailable ? "Hush neural 2026" : "Fallback DSP"
+        neuralSuppressor.isAvailable ? "DPDFNet · 48 kHz" : "DPDFNet unavailable"
     }
 
     var onMonitorError: (@Sendable (String) -> Void)?
@@ -63,13 +63,17 @@ final class AudioCaptureController: NSObject, AVCaptureAudioDataOutputSampleBuff
     private let session = AVCaptureSession()
     private let processingQueue = DispatchQueue(label: "io.github.pilshchikov.krasp.audio", qos: .userInitiated)
     private let neuralSuppressor = NeuralNoiseSuppressor()
-    private let suppressor = AdaptiveNoiseSuppressor()
+    var onProcessingError: (@Sendable (String) -> Void)?
+    private var processingFailed = false
     private var output: AVCaptureAudioDataOutput?
     private var sink: any VirtualMicrophoneSink = SharedMemoryVirtualMicrophoneSink()
     private var lastMeterUpdate = DispatchTime.now()
 
     func start(deviceUID: String?) throws {
         stop()
+        guard neuralSuppressor.isAvailable else {
+            throw DenoisingError.unavailable(neuralSuppressor.loadError)
+        }
 
         guard let device = captureDevice(uid: deviceUID) else {
             throw AudioCaptureError.microphoneNotFound
@@ -111,7 +115,7 @@ final class AudioCaptureController: NSObject, AVCaptureAudioDataOutputSampleBuff
         session.commitConfiguration()
 
         neuralSuppressor.reset()
-        suppressor.reset()
+        processingFailed = false
         output = audioOutput
         session.startRunning()
     }
@@ -132,7 +136,7 @@ final class AudioCaptureController: NSObject, AVCaptureAudioDataOutputSampleBuff
         didOutput sampleBuffer: CMSampleBuffer,
         from connection: AVCaptureConnection
     ) {
-        guard CMSampleBufferDataIsReady(sampleBuffer) else {
+        guard !processingFailed, CMSampleBufferDataIsReady(sampleBuffer) else {
             return
         }
 
@@ -161,12 +165,20 @@ final class AudioCaptureController: NSObject, AVCaptureAudioDataOutputSampleBuff
             return
         }
 
-        let original = samples
         let inputRMS = AudioMeter.rms(samples)
-        let metrics = neuralSuppressor.isAvailable
-            ? neuralSuppressor.process(samples: &samples, amount: suppressionAmount)
-            : suppressor.process(samples: &samples, amount: suppressionAmount)
         let sampleRate = Self.sampleRate(from: sampleBuffer) ?? 48_000
+        let metrics: NoiseProcessMetrics
+        do {
+            guard sampleRate == 48_000 else {
+                throw DenoisingError.unavailable("Microphone must provide 48 kHz audio")
+            }
+            metrics = try neuralSuppressor.process(samples: &samples, amount: suppressionAmount)
+        } catch {
+            processingFailed = true
+            monitor.stop()
+            onProcessingError?(error.localizedDescription)
+            return
+        }
         applyOutputGain(to: &samples)
 
         samples.withUnsafeBufferPointer { pointer in
@@ -174,7 +186,7 @@ final class AudioCaptureController: NSObject, AVCaptureAudioDataOutputSampleBuff
         }
 
         do {
-            try monitor.write(monitorSource == .original ? original : samples)
+            try monitor.write(monitorSource == .original ? neuralSuppressor.alignedOriginal : samples)
         } catch {
             monitor.stop()
             onMonitorError?(error.localizedDescription)
@@ -230,23 +242,13 @@ final class AudioCaptureController: NSObject, AVCaptureAudioDataOutputSampleBuff
 
     private func applyOutputGain(to samples: inout [Float]) {
         let clampedGain = max(OutputLevel.minimumGain, min(OutputLevel.maximumGain, outputGain))
-        guard clampedGain != 1 else {
-            return
-        }
-
         for index in samples.indices {
-            samples[index] = Self.softLimit(samples[index] * clampedGain)
+            samples[index] = max(-1, min(1, samples[index] * clampedGain))
         }
-    }
-
-    private static func softLimit(_ sample: Float) -> Float {
-        let clamped = max(-OutputLevel.softLimitCeiling, min(OutputLevel.softLimitCeiling, sample))
-        return clamped / (1 + abs(clamped) * 0.04)
     }
 }
 
 private enum OutputLevel {
     static let minimumGain: Float = 0.5
     static let maximumGain: Float = 2.0
-    static let softLimitCeiling: Float = 1.5
 }

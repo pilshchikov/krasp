@@ -35,7 +35,7 @@ git push origin v2026.1.1
 
 Before promoting Krasp as an end-user release, add a Developer ID signing path:
 
-1. Sign `KraspHAL.driver`, `libdf.dylib`, and `Krasp.app` with a Developer ID Application certificate.
+1. Sign `KraspHAL.driver`, both bundled DPDFNet runtime libraries, and `Krasp.app` with a Developer ID Application certificate.
 2. Sign the installer package or wrap the app in a signed DMG.
 3. Submit the artifact to Apple notarization.
 4. Staple the notarization ticket.

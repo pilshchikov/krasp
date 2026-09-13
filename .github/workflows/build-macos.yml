@@ -11,6 +11,8 @@ on:
       - "Tests/**"
       - "Package.swift"
       - "Makefile"
+      - "Scripts/**"
+      - "ThirdParty/Licenses/**"
       - "Sources/**"
       - "HAL/**"
       - "Shared/**"
@@ -23,6 +25,8 @@ on:
       - "Tests/**"
       - "Package.swift"
       - "Makefile"
+      - "Scripts/**"
+      - "ThirdParty/Licenses/**"
       - "Sources/**"
       - "HAL/**"
       - "Shared/**"
@@ -48,18 +52,7 @@ jobs:
         run: |
           swift --version
           clang --version
-          cargo --version
           uname -a
-
-      - name: Restore Cargo cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-          key: cargo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Makefile') }}
-          restore-keys: |
-            cargo-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Resolve version
         run: |
@@ -74,6 +67,9 @@ jobs:
 
       - name: Build installer package
         run: make dist CONFIGURATION=release VERSION="${KRASP_VERSION}" BUILD_NUMBER="${GITHUB_RUN_NUMBER}"
+
+      - name: Verify bundled DPDFNet runtime
+        run: KRASP_TEST_DPDFNET=1 KRASP_DPDFNET_RESOURCES="$PWD/.build/release/Krasp.app/Contents/Resources" swift test -c release --filter realDPDFNetLoadsProcessesAndResets
 
       - name: Upload installer package
         uses: actions/upload-artifact@v4

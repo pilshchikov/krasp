@@ -69,7 +69,8 @@ struct AppMenuView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
-                Slider(value: $appState.suppressionAmount, in: 0.25...1.0)
+                Slider(value: $appState.suppressionAmount, in: 0...1.0)
+                    .help("0%: original. 50%: 30 dB suppression limit. 100%: full DPDFNet suppression.")
                     .disabled(!appState.canRun)
 
                 Text("\(Int(appState.suppressionAmount * 100))%")
@@ -93,8 +94,8 @@ struct AppMenuView: View {
             }
 
             HStack(spacing: 8) {
-                Image(systemName: appState.processorName == "Fallback DSP" ? "exclamationmark.triangle" : "brain.head.profile")
-                    .foregroundStyle(appState.processorName == "Fallback DSP" ? .orange : .green)
+                Image(systemName: appState.processorName == "DPDFNet unavailable" ? "exclamationmark.triangle" : "brain.head.profile")
+                    .foregroundStyle(appState.processorName == "DPDFNet unavailable" ? .orange : .green)
                 Text(appState.processorName)
                     .font(.caption)
                     .foregroundStyle(.secondary)

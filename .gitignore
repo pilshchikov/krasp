@@ -24,3 +24,6 @@ ThirdParty/Hush/*.tar.gz
 # Local environment
 .env
 .env.*
+
+# Pinned DPDFNet model and prebuilt native runtime
+ThirdParty/DPDFNet/

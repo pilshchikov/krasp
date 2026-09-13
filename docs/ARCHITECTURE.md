@@ -10,7 +10,7 @@ Krasp has two cooperating runtime pieces:
 ```text
 AVCaptureDevice
   -> AVCaptureAudioDataOutput, mono float PCM
-  -> NeuralNoiseSuppressor or AdaptiveNoiseSuppressor
+  -> DenoisingStream -> NeuralNoiseSuppressor, DPDFNet at 48 kHz
   -> SharedMemoryVirtualMicrophoneSink
   -> /tmp/io.github.pilshchikov.krasp.audio
   -> KraspHAL.driver
@@ -21,9 +21,13 @@ The app writes processed samples into a fixed-size shared-memory ring buffer des
 
 ## Neural Processing
 
-`NeuralNoiseSuppressor` dynamically loads `libdf.dylib` and the Hush ONNX bundle from the app resources. The current app-level capture and HAL sample rate is 48 kHz, while Hush operates at 16 kHz. Krasp uses a simple 3:1 downsampling and interpolation upsampling adapter around the neural frame processor.
+`NeuralNoiseSuppressor` loads the pinned sherpa-onnx 1.13.8 C API through `CDPDFNet`. The `dpdfnet2_48khz_hr.onnx` model and ONNX Runtime ship in the app resources. Capture, model processing, playback monitoring, and the virtual microphone all use mono 48 kHz audio. No Apple voice processing is enabled.
 
-If the model or runtime cannot load, `AudioCaptureController` falls back to `AdaptiveNoiseSuppressor` so the app can still produce a processed stream.
+`DenoisingStream` collects 480-sample model hops. The runtime withholds its first hop and then returns audio beginning at the start of the input stream. A fixed 959-sample output delay, about 20 ms, accommodates that warmup and arbitrary capture block boundaries. This excludes device and HAL latency. Original audio follows the same timeline before blending or listening comparison. Warmup produces silence; missing or invalid later output stops processing.
+
+Suppression maps 0...100% to 0...60 dB using an original-signal weight of `10^(-dB/20)`. At 100%, the original weight is exactly zero. Weight changes ramp over one hop. The runtime's offline attenuation field does not control streaming, so Krasp applies this limit to aligned waveforms. There is no automatic gain compensation. The separate Output slider applies manual gain with a full-scale clamp.
+
+Reset clears the runtime's recurrent state and all Swift audio queues. Missing assets or processing errors are reported instead of silently selecting a different processor.
 
 ## HAL Driver
 

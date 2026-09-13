@@ -53,7 +53,9 @@ Krasp has two parts:
 - `Krasp.app`: the menu-bar app that captures your selected microphone and applies noise cancellation.
 - `KraspHAL.driver`: the virtual microphone driver that exposes the cleaned audio as `Krasp Microphone`.
 
-Under the hood, Krasp uses Hush/DeepFilterNet for neural speech enhancement. If the neural runtime cannot load, it falls back to a simpler local DSP path.
+Krasp uses DPDFNet for neural speech enhancement at 48 kHz. If the model or runtime cannot load, the app shows an error and stops processing.
+
+Suppression uses a decibel scale: 25% allows up to 15 dB reduction, 50% up to 30 dB, and 75% up to 45 dB. At 100%, you hear the fully processed signal. These are suppression limits, not guaranteed noise reduction. At 0%, the original audio passes through with the same processing delay.
 
 More detail is in [Architecture](docs/ARCHITECTURE.md).
 
@@ -61,8 +63,7 @@ More detail is in [Architecture](docs/ARCHITECTURE.md).
 
 - macOS 14 or newer.
 - Xcode command-line tools with Swift 6.1 support.
-- Rust toolchain with Cargo.
-- Internet access for the first neural build, which downloads Hush and clones DeepFilterNet.
+- Internet access for the first neural build, which downloads checksum-pinned DPDFNet and sherpa-onnx assets.
 
 ## Build
 
@@ -109,8 +110,9 @@ Release workflow notes are in [Release](docs/RELEASE.md).
 
 ## Third-Party Components
 
-- Hush model by Weya AI, Apache-2.0.
-- DeepFilterNet/libDF by the DeepFilterNet authors, Apache-2.0 or MIT.
+- DPDFNet model by Ceva, Apache-2.0.
+- sherpa-onnx runtime and C API, Apache-2.0.
+- ONNX Runtime, MIT.
 
 See [Third Party Notices](THIRD_PARTY_NOTICES.md).
 

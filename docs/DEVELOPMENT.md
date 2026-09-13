@@ -6,7 +6,6 @@ Install the required toolchains:
 
 ```sh
 xcode-select --install
-rustup default stable
 ```
 
 Then build the app:
@@ -15,17 +14,17 @@ Then build the app:
 make app
 ```
 
-The first neural build downloads the Hush model into `ThirdParty/Hush/` and clones DeepFilterNet into `ThirdParty/DeepFilterNet/`. Those paths are ignored by git and can be deleted at any time; `make neural` recreates them.
+The first neural build downloads DPDFNet and the universal macOS sherpa-onnx runtime into `ThirdParty/DPDFNet/`. `Scripts/prepare-dpdfnet.sh` verifies pinned SHA-256 checksums before installing the assets. The cache is ignored by git; `make neural` recreates it. Rust is not required.
 
 ## Common Commands
 
 ```sh
 make build       # Swift executable only
 make hal         # HAL driver only
-make neural      # Hush model plus libDF.dylib
+make neural      # Verified DPDFNet model and native runtime
 make app         # Full app bundle
 make dist        # Release installer package plus SHA-256 checksum
-make verify      # Fast source/build sanity checks
+make verify      # Unit tests, real-model integration test, and HAL checks
 make clean       # Remove Swift build output
 ```
 

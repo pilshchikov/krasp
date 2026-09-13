@@ -21,12 +21,7 @@ RESOURCES_DIR := $(CONTENTS_DIR)/Resources
 HAL_DIR := $(BUILD_DIR)/$(HAL_NAME).driver
 HAL_CONTENTS_DIR := $(HAL_DIR)/Contents
 HAL_MACOS_DIR := $(HAL_CONTENTS_DIR)/MacOS
-DEEPFILTER_DIR := ThirdParty/DeepFilterNet
-DEEPFILTER_REPO := https://github.com/Rikorose/DeepFilterNet.git
-DEEPFILTER_REF ?= d375b2d8309e0935d165700c91da9de862a99c31
-HUSH_MODEL := ThirdParty/Hush/advanced_dfnet16k_model_best_onnx.tar.gz
-HUSH_MODEL_URL := https://huggingface.co/weya-ai/hush/resolve/main/onnx/advanced_dfnet16k_model_best_onnx.tar.gz
-DEEPFILTER_LIB := $(DEEPFILTER_DIR)/target/release/libdf.dylib
+DPDFNET_DIR := ThirdParty/DPDFNet
 
 .PHONY: build app hal neural sign-app dist verify install-hal install-hal-user uninstall-hal uninstall-hal-user run clean
 
@@ -39,8 +34,9 @@ app: build hal neural
 	cp "$(BUILD_DIR)/$(APP_NAME)" "$(MACOS_DIR)/$(APP_NAME)"
 	cp "Packaging/Info.plist" "$(CONTENTS_DIR)/Info.plist"
 	cp -R "$(HAL_DIR)" "$(RESOURCES_DIR)/$(HAL_NAME).driver"
-	cp "$(DEEPFILTER_LIB)" "$(RESOURCES_DIR)/libdf.dylib"
-	cp "$(HUSH_MODEL)" "$(RESOURCES_DIR)/advanced_dfnet16k_model_best_onnx.tar.gz"
+	cp "$(DPDFNET_DIR)/runtime/"*.dylib "$(RESOURCES_DIR)/"
+	cp "$(DPDFNET_DIR)/dpdfnet2_48khz_hr.onnx" "$(RESOURCES_DIR)/"
+	cp -R ThirdParty/Licenses "$(RESOURCES_DIR)/Licenses"
 	cp "Sources/Krasp/Resources/AppIcon.icns" "$(RESOURCES_DIR)/AppIcon.icns"
 	plutil -replace CFBundleExecutable -string "$(APP_NAME)" "$(CONTENTS_DIR)/Info.plist"
 	plutil -replace CFBundleName -string "$(APP_NAME)" "$(CONTENTS_DIR)/Info.plist"
@@ -66,10 +62,7 @@ hal:
 	codesign $(CODESIGN_FLAGS) --sign "$(CODESIGN_IDENTITY)" "$(HAL_DIR)"
 
 neural:
-	test -f "$(HUSH_MODEL)" || (mkdir -p "ThirdParty/Hush" && curl -L --fail -o "$(HUSH_MODEL)" "$(HUSH_MODEL_URL)")
-	test -d "$(DEEPFILTER_DIR)/.git" || (rm -rf "$(DEEPFILTER_DIR)" && git clone "$(DEEPFILTER_REPO)" "$(DEEPFILTER_DIR)")
-	cd "$(DEEPFILTER_DIR)" && git checkout --detach "$(DEEPFILTER_REF)"
-	cd "$(DEEPFILTER_DIR)/libDF" && cargo build --release --no-default-features --features capi
+	./Scripts/prepare-dpdfnet.sh
 
 sign-app:
 	codesign $(CODESIGN_FLAGS) --deep --sign "$(CODESIGN_IDENTITY)" "$(APP_DIR)"
@@ -84,8 +77,8 @@ dist: app
 		"$(DIST_DIR)/$(PKG_NAME)"
 	shasum -a 256 "$(DIST_DIR)/$(PKG_NAME)" > "$(DIST_DIR)/$(PKG_NAME).sha256"
 
-verify:
-	swift test -c $(CONFIGURATION)
+verify: neural
+	KRASP_TEST_DPDFNET=1 swift test -c $(CONFIGURATION)
 	$(MAKE) hal
 	clang -std=c11 -Wall -Wextra -Werror -framework CoreAudio -framework CoreFoundation Tests/HAL/RingTests.c -o "$(BUILD_DIR)/KraspRingTests"
 	"$(BUILD_DIR)/KraspRingTests"

@@ -11,8 +11,10 @@ let package = Package(
         .executable(name: "Krasp", targets: ["Krasp"])
     ],
     targets: [
+        .target(name: "CDPDFNet", path: "Sources/CDPDFNet", exclude: ["vendor/LICENSE"]),
         .executableTarget(
             name: "Krasp",
+            dependencies: ["CDPDFNet"],
             path: "Sources/Krasp",
             exclude: ["Resources"],
             swiftSettings: [

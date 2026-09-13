@@ -75,6 +75,12 @@ final class AppState: ObservableObject {
         audioController.suppressionAmount = Float(preferences.suppressionAmount)
         audioController.outputGain = Float(preferences.outputGain)
         processorName = audioController.processorName
+        audioController.onProcessingError = { [weak self] message in
+            Task { @MainActor in
+                self?.isEnabled = false
+                self?.statusText = message
+            }
+        }
         audioController.onMonitorError = { [weak self] message in
             Task { @MainActor in
                 self?.isMonitoring = false
