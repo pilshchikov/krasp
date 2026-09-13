@@ -39,6 +39,27 @@ final class AudioCaptureController: NSObject, AVCaptureAudioDataOutputSampleBuff
         neuralSuppressor.isAvailable ? "Hush neural 2026" : "Fallback DSP"
     }
 
+    var onMonitorError: (@Sendable (String) -> Void)?
+    private let monitor = MicrophoneMonitor()
+    private var monitorSource: MonitorSource = .processed
+
+    func setMonitoring(_ enabled: Bool) throws {
+        try processingQueue.sync {
+            if enabled {
+                try monitor.start()
+            } else {
+                monitor.stop()
+            }
+        }
+    }
+
+    func setMonitorSource(_ source: MonitorSource) {
+        processingQueue.sync {
+            monitorSource = source
+            monitor.reset()
+        }
+    }
+
     private let session = AVCaptureSession()
     private let processingQueue = DispatchQueue(label: "io.github.pilshchikov.krasp.audio", qos: .userInitiated)
     private let neuralSuppressor = NeuralNoiseSuppressor()
@@ -103,7 +124,7 @@ final class AudioCaptureController: NSObject, AVCaptureAudioDataOutputSampleBuff
         output?.setSampleBufferDelegate(nil, queue: nil)
         output = nil
         // Finish callbacks before resetting processors or starting another device.
-        processingQueue.sync {}
+        processingQueue.sync { monitor.stop() }
     }
 
     func captureOutput(
@@ -140,6 +161,7 @@ final class AudioCaptureController: NSObject, AVCaptureAudioDataOutputSampleBuff
             return
         }
 
+        let original = samples
         let inputRMS = AudioMeter.rms(samples)
         let metrics = neuralSuppressor.isAvailable
             ? neuralSuppressor.process(samples: &samples, amount: suppressionAmount)
@@ -149,6 +171,13 @@ final class AudioCaptureController: NSObject, AVCaptureAudioDataOutputSampleBuff
 
         samples.withUnsafeBufferPointer { pointer in
             sink.write(samples: pointer, sampleRate: sampleRate)
+        }
+
+        do {
+            try monitor.write(monitorSource == .original ? original : samples)
+        } catch {
+            monitor.stop()
+            onMonitorError?(error.localizedDescription)
         }
 
         publishMeters(input: inputRMS, reduction: metrics.reduction)

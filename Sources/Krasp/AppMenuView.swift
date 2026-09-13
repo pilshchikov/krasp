@@ -12,6 +12,7 @@ struct AppMenuView: View {
             Divider()
             controls
             meters
+            monitoring
             footer
         }
         .padding(16)
@@ -182,6 +183,45 @@ struct AppMenuView: View {
         VStack(alignment: .leading, spacing: 8) {
             MeterRow(title: "Input", value: appState.inputLevel, color: .blue)
             MeterRow(title: "Reduction", value: appState.reductionLevel, color: .green)
+        }
+    }
+
+    private var monitoring: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Button {
+                    appState.toggleMonitoring()
+                } label: {
+                    Image(systemName: "headphones")
+                        .foregroundStyle(appState.isMonitoring ? Color.green : Color.secondary)
+                }
+                .buttonStyle(.borderless)
+                .disabled(!appState.isEnabled || !appState.canRun)
+                .accessibilityLabel(appState.isMonitoring ? "Stop listening" : "Listen to microphone")
+                .help(appState.isMonitoring ? "Stop listening" : "Listen to microphone. Use headphones to avoid feedback.")
+
+                Text(appState.isMonitoring ? "Listening" : "Listen to microphone")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+            }
+
+            if appState.isMonitoring {
+                Picker("Listen to", selection: $appState.monitorSource) {
+                    ForEach(MonitorSource.allCases, id: \.self) { source in
+                        Text(source.rawValue).tag(source)
+                    }
+                }
+                .pickerStyle(.segmented)
+                Text("Use headphones to avoid feedback.")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+            if let error = appState.monitorError {
+                Text(error)
+                    .font(.caption2)
+                    .foregroundStyle(.red)
+            }
         }
     }
 

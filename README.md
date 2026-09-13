@@ -30,6 +30,9 @@ The processing runs locally on your Mac. Krasp does not send microphone audio to
 - Lets you choose the physical input microphone.
 - Lets you adjust how strong the noise cancellation should be.
 - Shows simple input and reduction meters while it is running.
+- Lets you listen through headphones and compare the original microphone with the cleaned output.
+
+To listen, enable noise cancellation and click the headphone button. Switch between `Cleaned` and `Original` to hear the difference. This comparison only changes what you hear; other apps still receive the cleaned microphone. Click the headphone button again to stop. Playback uses your current macOS sound output, so use headphones to avoid feedback.
 
 ## Why
 

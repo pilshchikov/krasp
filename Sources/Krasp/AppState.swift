@@ -29,6 +29,30 @@ final class AppState: ObservableObject {
             isEnabled ? start() : stop()
         }
     }
+    @Published private(set) var isMonitoring = false
+    @Published var monitorError: String?
+    @Published var monitorSource: MonitorSource = .processed {
+        didSet { audioController.setMonitorSource(monitorSource) }
+    }
+
+    func toggleMonitoring() {
+        guard isEnabled, canRun else { return }
+        do {
+            try audioController.setMonitoring(!isMonitoring)
+            isMonitoring.toggle()
+            monitorError = nil
+        } catch {
+            isMonitoring = false
+            monitorError = "Cannot play microphone: \(error.localizedDescription)"
+        }
+    }
+
+    private func stopMonitoring() {
+        try? audioController.setMonitoring(false)
+        isMonitoring = false
+        monitorError = nil
+    }
+
     @Published var canRun = false
     @Published var statusText = "Checking microphone access"
     @Published var inputLevel = 0.0
@@ -51,6 +75,12 @@ final class AppState: ObservableObject {
         audioController.suppressionAmount = Float(preferences.suppressionAmount)
         audioController.outputGain = Float(preferences.outputGain)
         processorName = audioController.processorName
+        audioController.onMonitorError = { [weak self] message in
+            Task { @MainActor in
+                self?.isMonitoring = false
+                self?.monitorError = "Microphone playback stopped: \(message)"
+            }
+        }
         audioController.onMeterUpdate = { [weak self] input, reduction in
             Task { @MainActor in
                 self?.inputLevel = input
@@ -70,6 +100,7 @@ final class AppState: ObservableObject {
     func refreshDevices() async {
         // Suppress selection-triggered restarts until permissions and devices agree.
         canRun = false
+        stopMonitoring()
         audioController.stop()
         inputLevel = 0
         reductionLevel = 0
@@ -137,6 +168,7 @@ final class AppState: ObservableObject {
             return
         }
 
+        stopMonitoring()
         do {
             try audioController.start(deviceUID: selectedDeviceUID)
             processorName = audioController.processorName
@@ -148,6 +180,7 @@ final class AppState: ObservableObject {
     }
 
     private func stop() {
+        stopMonitoring()
         audioController.stop()
         inputLevel = 0
         reductionLevel = 0
